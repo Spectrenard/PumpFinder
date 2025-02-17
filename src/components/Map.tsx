@@ -9,7 +9,6 @@ import { fetchNearbyStations, FuelStation } from "@/services/stationService";
 import { createStationMarker } from "./StationMarker";
 import Sidebar from "./Sidebar";
 import "leaflet.markercluster";
-import { FaGasPump } from "react-icons/fa";
 
 type Station = {
   id: string;
@@ -59,16 +58,30 @@ export default function Map({
       await import("leaflet.markercluster");
 
       if (typeof window !== "undefined" && !mapRef.current) {
+        // Coordonnées des limites de la France métropolitaine
+        const southWest = L.latLng(41.333, -4.87); // Sud-Ouest
+        const northEast = L.latLng(51.124, 8.23); // Nord-Est
+        const franceBounds = L.latLngBounds(southWest, northEast);
+
         mapRef.current = L.map("map", {
           zoomControl: false,
           attributionControl: false,
           fadeAnimation: false,
           zoomAnimation: false,
           markerZoomAnimation: false,
+          minZoom: 5.5, // Zoom minimum pour voir toute la France
+          maxZoom: 18, // Zoom maximum pour le détail
+          maxBounds: franceBounds, // Limites de la carte
+          maxBoundsViscosity: 1.0, // Force de "rebond" aux limites (1.0 = maximum)
         }).setView([46.603354, 1.888334], 6);
+
+        // Ajouter un padding aux limites pour une meilleure expérience
+        const paddedBounds = franceBounds.pad(0.1);
+        mapRef.current.setMaxBounds(paddedBounds);
 
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
           attribution: "© OpenStreetMap contributors",
+          bounds: franceBounds, // Limiter le chargement des tuiles à la France
         }).addTo(mapRef.current);
 
         // Initialiser MarkerClusterGroup
@@ -81,6 +94,11 @@ export default function Map({
 
         markersRef.current = markerCluster;
         mapRef.current.addLayer(markerCluster);
+
+        // Empêcher le déplacement hors des limites
+        mapRef.current.on("drag", () => {
+          mapRef.current?.panInsideBounds(paddedBounds, { animate: false });
+        });
 
         // Charger les stations quand la carte bouge
         mapRef.current.on("moveend", async () => {
