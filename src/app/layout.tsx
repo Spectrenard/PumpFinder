@@ -5,7 +5,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "FuelFinder - Trouvez le carburant le moins cher",
+  title: "PumpFinder - Trouvez le carburant le moins cher",
   description: "Comparez les prix des carburants près de chez vous",
 };
 

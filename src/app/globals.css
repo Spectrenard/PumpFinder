@@ -66,3 +66,35 @@ body {
   color: white !important;
   @apply font-bold;
 }
+
+/* Styles pour le popup Leaflet */
+.custom-popup .leaflet-popup-content-wrapper {
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+  border-radius: 0;
+}
+
+.custom-popup .leaflet-popup-content {
+  margin: 0;
+  width: auto !important;
+}
+
+.custom-popup .leaflet-popup-tip {
+  display: none;
+}
+
+.custom-popup .leaflet-popup-close-button {
+  color: rgb(161 161 170);
+  font-size: 20px;
+  padding: 8px;
+  margin: 8px;
+  transition: color 0.2s;
+}
+
+.custom-popup .leaflet-popup-close-button:hover {
+  color: white;
+  background: none;
+  border: none;
+}

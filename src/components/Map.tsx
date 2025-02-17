@@ -9,6 +9,8 @@ import { fetchNearbyStations, FuelStation } from "@/services/stationService";
 import { createStationMarker } from "./StationMarker";
 import Sidebar from "./Sidebar";
 import "leaflet.markercluster";
+import { renderToString } from "react-dom/server";
+import StationPopup from "./StationPopup";
 
 type Station = {
   id: string;
@@ -159,33 +161,16 @@ export default function Map({
             }),
           });
 
-          const popupContent = `
-            <div class="p-4">
-              <h3 class="font-bold text-lg">${
-                station.brand || "Station service"
-              }</h3>
-              <p class="text-sm text-gray-600">${station.address}, ${
-            station.city
-          }</p>
-              <div class="mt-2">
-                ${Object.entries(station.prices)
-                  .filter(([_, price]) => price !== null)
-                  .map(
-                    ([fuel, price]) => `
-                    <div class="flex justify-between items-center py-1">
-                      <span class="font-medium">${fuel.toUpperCase()}</span>
-                      <span class="text-blue-600 font-bold">${price?.toFixed(
-                        3
-                      )}€</span>
-                    </div>
-                  `
-                  )
-                  .join("")}
-              </div>
-            </div>
-          `;
+          const popupContent = renderToString(
+            <StationPopup station={station} />
+          );
 
-          marker.bindPopup(popupContent);
+          marker.bindPopup(popupContent, {
+            className: "custom-popup",
+            maxWidth: 400,
+            minWidth: 280,
+          });
+
           markersRef.current.addLayer(marker);
         });
       }
@@ -231,23 +216,47 @@ export default function Map({
     if (!markersRef.current) return;
 
     const popupContent = `
-      <div class="p-2">
-        <h3 class="font-bold">${station.name}</h3>
-        <p class="text-sm text-gray-600">${station.address}</p>
-        <div class="mt-2">
+      <div class="min-w-[280px] p-3 bg-zinc-900 text-white rounded-lg">
+        <!-- En-tête simplifié -->
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center">
+            <svg class="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-4 4h-4" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="font-medium text-white">${station.name}</h3>
+            <p class="text-xs text-zinc-400">${station.address}</p>
+          </div>
+        </div>
+
+        <!-- Prix en ligne -->
+        <div class="flex flex-wrap gap-2 mb-3">
           ${Object.entries(station.prices)
             .map(
               ([fuel, price]) => `
-              <div class="flex justify-between">
-                <span>${fuel.toUpperCase()}:</span>
-                <span class="font-bold">${price}€/L</span>
+              <div class="px-2 py-1 bg-zinc-800 rounded-lg">
+                <span class="text-xs text-zinc-400">${fuel.toUpperCase()}</span>
+                <span class="ml-2 text-sm font-medium text-green-400">${price}€/L</span>
               </div>
             `
             )
             .join("")}
         </div>
-        <div class="mt-2 text-sm text-gray-500">
-          Mise à jour: ${new Date(station.lastUpdate).toLocaleString()}
+
+        <!-- Footer compact -->
+        <div class="flex items-center justify-between text-xs text-zinc-500">
+          <span>Mise à jour ${new Date(
+            station.lastUpdate
+          ).toLocaleString()}</span>
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${
+            station.latitude
+          },${station.longitude}" 
+             target="_blank"
+             class="px-4 py-2 bg-blue-100/20 hover:bg-blue-700 rounded-lg text-white text-sm font-medium transition-colors">
+            Itinéraire
+          </a>
         </div>
       </div>
     `;

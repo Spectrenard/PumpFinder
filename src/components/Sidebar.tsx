@@ -76,8 +76,7 @@ export default function Sidebar({
       {/* Overlay amélioré */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 
-                     transition-opacity duration-300"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 transition-opacity duration-300"
           onClick={onClose}
         />
       )}
@@ -320,7 +319,8 @@ export default function Sidebar({
                           )
                         }
                         className="flex items-center gap-2 px-4 py-2 
-                                 bg-blue-600 hover:bg-blue-700
+                                 bg-gradient-to-r from-blue-600 to-blue-500
+                         hover:from-blue-500 hover:to-blue-400
                                  rounded-lg text-white text-sm font-medium
                                  transition-colors"
                       >
