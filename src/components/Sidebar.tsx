@@ -4,6 +4,8 @@ import {
   FaLocationArrow,
   FaClock,
   FaChevronDown,
+  FaSearch,
+  FaMapMarkerAlt,
 } from "react-icons/fa";
 
 interface FuelStation {
@@ -332,8 +334,73 @@ export default function Sidebar({
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center h-full p-8">
-                {/* État vide amélioré - voir code précédent */}
+              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+                <div
+                  className="w-16 h-16 mb-6 rounded-full bg-zinc-800 
+                                flex items-center justify-center"
+                >
+                  <FaGasPump className="w-8 h-8 text-zinc-600" />
+                </div>
+
+                <h3 className="text-xl font-medium text-white mb-3">
+                  Aucune station trouvée
+                </h3>
+
+                <p className="text-zinc-400 text-sm max-w-[280px] mb-8">
+                  Voici quelques suggestions pour trouver des stations :
+                </p>
+
+                <div className="space-y-4 w-full max-w-[280px]">
+                  <div className="flex items-start gap-3 text-left">
+                    <div
+                      className="w-8 h-8 rounded-lg bg-zinc-800 flex-shrink-0
+                                    flex items-center justify-center"
+                    >
+                      <FaSearch className="w-4 h-4 text-blue-400" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-zinc-200">
+                        Recherchez une ville
+                      </h4>
+                      <p className="text-xs text-zinc-400 mt-1">
+                        Utilisez la barre de recherche pour trouver une zone
+                        spécifique
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 text-left">
+                    <div
+                      className="w-8 h-8 rounded-lg bg-zinc-800 flex-shrink-0
+                                    flex items-center justify-center"
+                    >
+                      <FaMapMarkerAlt className="w-4 h-4 text-blue-400" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-zinc-200">
+                        Déplacez la carte
+                      </h4>
+                      <p className="text-xs text-zinc-400 mt-1">
+                        Explorez d'autres zones en déplaçant la carte ou en
+                        zoomant
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bouton de réinitialisation des filtres si des filtres sont actifs */}
+                {sortBy && (
+                  <button
+                    onClick={() => {
+                      setSortBy(null);
+                      onSortChange("");
+                    }}
+                    className="mt-8 px-4 py-2 bg-blue-600 rounded-lg text-white text-sm 
+                               hover:bg-blue-700 transition-colors"
+                  >
+                    Réinitialiser les filtres
+                  </button>
+                )}
               </div>
             )}
           </div>
