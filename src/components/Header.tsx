@@ -1,12 +1,16 @@
 import React, { useState } from "react";
 import L from "leaflet";
+import { FaBars } from "react-icons/fa";
+import { Icon } from "leaflet";
 
 interface HeaderProps {
   mapRef: React.RefObject<L.Map | null>;
+  onToggleSidebar: () => void;
 }
 
-export default function Header({ mapRef }: HeaderProps) {
+export default function Header({ mapRef, onToggleSidebar }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [locationMarker, setLocationMarker] = useState<L.Marker | null>(null);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,51 +36,140 @@ export default function Header({ mapRef }: HeaderProps) {
     }
   };
 
+  const handleGetLocation = () => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          if (mapRef.current) {
+            const { latitude, longitude } = position.coords;
+
+            // Supprime l'ancien marqueur s'il existe
+            if (locationMarker) {
+              locationMarker.remove();
+            }
+
+            // Crée un nouveau marqueur avec une icône personnalisée
+            const newMarker = L.marker([latitude, longitude], {
+              icon: L.divIcon({
+                className: "location-marker",
+                html: `
+                  <div class="w-6 h-6 bg-blue-500 rounded-full border-2 border-white shadow-lg relative">
+                    <div class="absolute w-full h-full rounded-full bg-blue-500 animate-ping opacity-75"></div>
+                  </div>
+                `,
+                iconSize: [24, 24],
+                iconAnchor: [12, 12],
+              }),
+            }).addTo(mapRef.current);
+
+            setLocationMarker(newMarker);
+            mapRef.current.setView([latitude, longitude], 13);
+          }
+        },
+        (error) => {
+          console.error("Erreur de géolocalisation :", error);
+          alert(
+            "Impossible de récupérer votre position. Veuillez vérifier vos paramètres de localisation."
+          );
+        }
+      );
+    } else {
+      alert("La géolocalisation n'est pas supportée par votre navigateur.");
+    }
+  };
+
   return (
-    <header className="p-6">
-      <div className="container mx-auto">
-        <div className="glass-effect rounded-2xl p-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-3 rounded-xl">
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 14c0-1.657-3.134-3-7-3s-7 1.343-7 3m14 0v4c0 1.657-3.134 3-7 3s-7-1.343-7-3v-4m14 0c0-1.657-3.134-3-7-3s-7 1.343-7 3m7-10a2 2 0 100-4 2 2 0 000 4z"
-                  />
-                </svg>
+    <header className="p-2 md:p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4">
+          <div className="flex flex-col md:flex-row items-center gap-4">
+            <div className="flex items-center justify-between w-full md:w-auto">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center">
+                  <svg
+                    className="w-5 h-5 md:w-6 md:h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 14c0-1.657-3.134-3-7-3s-7 1.343-7 3m14 0v4c0 1.657-3.134 3-7 3s-7-1.343-7-3v-4m14 0c0-1.657-3.134-3-7-3s-7 1.343-7 3m7-10a2 2 0 100-4 2 2 0 000 4z"
+                    />
+                  </svg>
+                </div>
+                <h1 className="text-xl md:text-2xl font-bold text-blue-400">
+                  PumpFinder
+                </h1>
               </div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
-                PumpFinder
-              </h1>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleGetLocation}
+                  className="md:hidden w-8 h-8 flex items-center justify-center bg-white/5 rounded-lg text-white/60 hover:text-white"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                </button>
+
+                <button
+                  onClick={onToggleSidebar}
+                  className="relative flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors md:hidden"
+                >
+                  <FaBars className="w-5 h-5" />
+                  <span className="text-sm font-medium">Voir les stations</span>
+
+                  {/* Indicateur de notification */}
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse">
+                    <span className="sr-only">
+                      Nouvelles stations disponibles
+                    </span>
+                  </div>
+                </button>
+              </div>
             </div>
 
-            <div className="flex-1 max-w-2xl">
+            <div className="flex-1 w-full max-w-2xl">
               <form onSubmit={handleSearch} className="relative">
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Rechercher une adresse..."
-                  className="input-search"
+                  className="w-full px-3 py-2.5 md:px-4 md:py-4 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder-white/60 outline-none focus:ring-1 focus:ring-white/40 transition-all"
                 />
                 <button
                   type="submit"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 btn-primary py-2"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 px-3 py-1.5 md:px-4 md:py-2 bg-blue-500 rounded-lg text-white hover:bg-blue-600 transition-colors text-sm"
                 >
                   Rechercher
                 </button>
               </form>
             </div>
 
-            <button className="btn-primary flex items-center gap-2">
+            <button
+              onClick={handleGetLocation}
+              className="hidden md:flex items-center gap-2 px-4 py-2 bg-white/5 rounded-lg text-white/60 hover:text-white transition-colors"
+            >
               <svg
                 className="w-5 h-5"
                 fill="none"

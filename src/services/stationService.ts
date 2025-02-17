@@ -24,7 +24,6 @@ export interface FuelStation {
   services: string[];
   automate24: boolean;
   shortage: string[];
-  presence: "A" | "R";
 }
 
 export async function fetchNearbyStations(
@@ -75,7 +74,6 @@ export async function fetchNearbyStations(
           services: fields.services ? fields.services.split("/") : [],
           automate24: fields.automate_24_24 === "Oui",
           shortage: fields.shortage ? fields.shortage.split("/") : [],
-          presence: fields.highway === "1" ? "A" : "R",
         };
       });
 
