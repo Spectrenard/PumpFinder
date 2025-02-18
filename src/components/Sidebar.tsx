@@ -7,6 +7,7 @@ import {
   FaSearch,
   FaMapMarkerAlt,
 } from "react-icons/fa";
+import FuelSelect from "./FuelSelect";
 
 interface FuelStation {
   id: string;
@@ -205,24 +206,7 @@ export default function Sidebar({
 
             {/* Sélecteur de carburant amélioré */}
             <div className="relative">
-              <select
-                value={selectedFuel}
-                onChange={(e) => onFuelChange(e.target.value)}
-                className="w-full appearance-none px-4 py-2.5 rounded-lg
-                         bg-zinc-800 border border-zinc-700
-                         text-white text-sm font-medium
-                         focus:border-blue-500 transition-colors"
-              >
-                <option value="sp95">Sans Plomb 95</option>
-                <option value="sp98">Sans Plomb 98</option>
-                <option value="gazole">Gazole</option>
-                <option value="e85">E85</option>
-                <option value="gplc">GPL</option>
-              </select>
-              <FaChevronDown
-                className="absolute right-4 top-1/2 -translate-y-1/2 
-                                      text-zinc-400 pointer-events-none w-4 h-4"
-              />
+              <FuelSelect value={selectedFuel} onChange={onFuelChange} />
             </div>
           </div>
 
