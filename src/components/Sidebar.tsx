@@ -7,6 +7,8 @@ import {
   FaSearch,
   FaMapMarkerAlt,
 } from "react-icons/fa";
+import { formatDistanceToNow, format } from "date-fns";
+import { fr } from "date-fns/locale";
 import FuelSelect from "./FuelSelect";
 
 interface FuelStation {
@@ -72,6 +74,40 @@ export default function Sidebar({
 
     const fuelKey = fuelMapping[fuel];
     return fuelKey ? station.prices[fuelKey] : null;
+  };
+
+  const formatLastUpdate = (date: string) => {
+    const updateDate = new Date(date);
+    const timeAgo = formatDistanceToNow(updateDate, {
+      addSuffix: true,
+      locale: fr,
+    });
+
+    const formattedDate = format(updateDate, "dd/MM/yyyy", {
+      locale: fr,
+    });
+
+    // Calcul de la fraîcheur des données
+    const hoursAgo = (Date.now() - updateDate.getTime()) / (1000 * 60 * 60);
+
+    let statusColor = "text-green-400";
+    if (hoursAgo > 48) {
+      statusColor = "text-red-400";
+    } else if (hoursAgo > 24) {
+      statusColor = "text-orange-400";
+    }
+
+    return (
+      <div className="flex flex-col">
+        <div className="flex items-center gap-2 mb-1">
+          <FaClock className={`w-3.5 h-3.5 ${statusColor}`} />
+          <span className="text-sm text-zinc-400">{timeAgo}</span>
+        </div>
+        <span className="text-xs text-zinc-500">
+          Mis à jour le {formattedDate}
+        </span>
+      </div>
+    );
   };
 
   return (
@@ -146,68 +182,10 @@ export default function Sidebar({
               >
                 Prix croissant
               </button>
-
-              {/* Bouton de distance conditionnel */}
-              {navigator.geolocation && (
-                <button
-                  onClick={() => {
-                    if (sortBy === "distance") {
-                      setSortBy(null);
-                      onSortChange("");
-                    } else {
-                      // Demander la localisation si nécessaire
-                      navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                          setSortBy("distance");
-                          onSortChange("distance");
-                        },
-                        (error) => {
-                          alert(
-                            "Activez la localisation pour trier par distance"
-                          );
-                          console.error("Erreur de géolocalisation:", error);
-                        }
-                      );
-                    }
-                  }}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors
-                             flex items-center gap-2
-                             ${
-                               sortBy === "distance"
-                                 ? "bg-blue-600 text-white"
-                                 : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
-                             }`}
-                >
-                  <span>Distance</span>
-                  {sortBy !== "distance" && (
-                    <svg
-                      className="w-3.5 h-3.5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                    </svg>
-                  )}
-                </button>
-              )}
             </div>
 
             {/* Sélecteur de carburant amélioré */}
-            <div className="relative">
-              <FuelSelect value={selectedFuel} onChange={onFuelChange} />
-            </div>
+            <FuelSelect value={selectedFuel} onChange={onFuelChange} />
           </div>
 
           {/* Liste des stations */}
@@ -280,22 +258,12 @@ export default function Sidebar({
                         ))}
                     </div>
 
-                    {/* Footer avec services et actions */}
+                    {/* Footer avec date précise et temps relatif */}
                     <div
                       className="flex items-center justify-between pt-3 
-                                  border-t border-zinc-700/50"
+                                    border-t border-zinc-700/50"
                     >
-                      <div className="flex gap-2">
-                        {station.services?.includes("24/24") && (
-                          <span
-                            className="px-2 py-1 text-xs font-medium 
-                                       bg-blue-500/20 text-blue-400 rounded"
-                          >
-                            24/24
-                          </span>
-                        )}
-                        {/* Autres services... */}
-                      </div>
+                      {formatLastUpdate(station.lastUpdate)}
 
                       <button
                         onClick={() =>
@@ -305,10 +273,8 @@ export default function Sidebar({
                           )
                         }
                         className="flex items-center gap-2 px-4 py-2 
-                                 bg-gradient-to-r from-blue-600 to-blue-500
-                         hover:from-blue-500 hover:to-blue-400
-                                 rounded-lg text-white text-sm font-medium
-                                 transition-colors"
+                                   bg-blue-600 hover:bg-blue-700 rounded-lg 
+                                   text-white font-medium transition-colors"
                       >
                         <FaLocationArrow className="w-3.5 h-3.5" />
                         <span>Itinéraire</span>
