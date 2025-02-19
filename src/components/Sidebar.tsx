@@ -3,9 +3,8 @@ import {
   FaGasPump,
   FaLocationArrow,
   FaClock,
-  FaChevronDown,
-  FaSearch,
-  FaMapMarkerAlt,
+  FaBolt,
+  FaPlug,
 } from "react-icons/fa";
 import { formatDistanceToNow, format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -30,8 +29,22 @@ interface FuelStation {
   lastUpdate: string;
 }
 
+interface ChargingStation {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  latitude: number;
+  longitude: number;
+  lastUpdate: string;
+  power: number;
+  chargingPoints: number;
+  connectorTypes: string[];
+}
+
 interface SidebarProps {
   stations: FuelStation[];
+  chargingStations: ChargingStation[];
   selectedFuel: string;
   onFuelChange: (fuel: string) => void;
   onSortChange: (sort: string) => void;
@@ -41,6 +54,7 @@ interface SidebarProps {
 
 export default function Sidebar({
   stations = [],
+  chargingStations = [],
   selectedFuel,
   onFuelChange,
   onSortChange,
@@ -48,6 +62,7 @@ export default function Sidebar({
   onClose,
 }: SidebarProps) {
   const [sortBy, setSortBy] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"all" | "fuel" | "charging">("all");
 
   const formatPrice = (price: number | null | undefined) => {
     return price ? `${price.toFixed(2)} €/L` : "Non disponible";
@@ -110,9 +125,70 @@ export default function Sidebar({
     );
   };
 
+  const renderChargingStation = (station: ChargingStation, index: number) => (
+    <div
+      key={`${station.id}-${index}`}
+      className="p-4 bg-zinc-800 rounded-xl hover:bg-zinc-750"
+    >
+      {/* En-tête */}
+      <div className="flex items-start gap-3 mb-3">
+        <div className="w-12 h-12 rounded-lg bg-zinc-800 flex items-center justify-center">
+          <FaBolt className="w-6 h-6 text-green-500" />
+        </div>
+        <div className="flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <h3 className="font-medium text-white">{station.name}</h3>
+              <p className="text-sm text-zinc-400">{station.address}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Informations */}
+      <div className="flex flex-wrap gap-2 mb-3">
+        <div className="px-2 py-1 bg-zinc-700/50 rounded-lg">
+          <span className="text-xs text-zinc-400">Puissance</span>
+          <span className="ml-2 text-sm font-medium text-green-400">
+            {station.power} kW
+          </span>
+        </div>
+        <div className="px-2 py-1 bg-zinc-700/50 rounded-lg">
+          <span className="text-xs text-zinc-400">Points</span>
+          <span className="ml-2 text-sm font-medium text-white">
+            {station.chargingPoints}
+          </span>
+        </div>
+        {station.connectorTypes.map((type, index) => (
+          <div key={index} className="px-2 py-1 bg-zinc-700/50 rounded-lg">
+            <div className="flex items-center gap-1.5">
+              <FaPlug className="w-3 h-3 text-zinc-400" />
+              <span className="text-xs text-white">{type}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Footer */}
+      <div className="flex items-center justify-between pt-3 border-t border-zinc-700/50">
+        {formatLastUpdate(station.lastUpdate)}
+        <a
+          href={`https://www.google.com/maps/dir/?api=1&destination=${station.latitude},${station.longitude}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-500 
+                    rounded-lg text-white text-sm font-medium transition-colors"
+        >
+          <FaLocationArrow className="w-3.5 h-3.5" />
+          <span>Itinéraire</span>
+        </a>
+      </div>
+    </div>
+  );
+
   return (
     <>
-      {/* Overlay amélioré */}
+      {/* Overlay */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 transition-opacity duration-300"
@@ -120,28 +196,25 @@ export default function Sidebar({
         />
       )}
 
-      {/* Sidebar repensée */}
       <div
         className={`fixed md:static top-0 left-0 h-full w-[85vw] md:w-96 
-                   bg-zinc-900 border-r border-zinc-800
-                   z-50 transform transition-all duration-300 
-                   ${
-                     isOpen
-                       ? "translate-x-0"
-                       : "-translate-x-full md:translate-x-0"
-                   }`}
+                      bg-zinc-900 border-r border-zinc-800 z-50 
+                      transform transition-all duration-300 
+                      ${
+                        isOpen
+                          ? "translate-x-0"
+                          : "-translate-x-full md:translate-x-0"
+                      }`}
       >
         <div className="h-full flex flex-col">
-          {/* Header de la Sidebar */}
+          {/* Header */}
           <div className="p-4 border-b border-zinc-800">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-white">
-                Stations à proximité
-                {stations?.length > 0 && (
-                  <span className="ml-2 text-sm text-zinc-400">
-                    ({stations.length})
-                  </span>
-                )}
+                Points de ravitaillement
+                <span className="ml-2 text-sm text-zinc-400">
+                  ({stations.length + chargingStations.length})
+                </span>
               </h2>
               <button
                 onClick={onClose}
@@ -165,194 +238,171 @@ export default function Sidebar({
               </button>
             </div>
 
-            {/* Filtres rapides améliorés */}
-            <div className="flex gap-2 mb-4">
-              <button
-                onClick={() => {
-                  const newSort = sortBy === "price" ? null : "price";
-                  setSortBy(newSort);
-                  onSortChange(newSort || "");
-                }}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors
-                           ${
-                             sortBy === "price"
-                               ? "bg-blue-600 text-white"
-                               : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
-                           }`}
-              >
-                Prix croissant
-              </button>
-            </div>
+            {/* Filtres */}
+            <div className="space-y-3">
+              {/* Type de station */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setFilter("all")}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2
+                             ${
+                               filter === "all"
+                                 ? "bg-zinc-700 text-white"
+                                 : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+                             }`}
+                >
+                  <span>Tout</span>
+                </button>
+                <button
+                  onClick={() => setFilter("fuel")}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2
+                             ${
+                               filter === "fuel"
+                                 ? "bg-blue-600 text-white"
+                                 : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+                             }`}
+                >
+                  <FaGasPump className="w-4 h-4" />
+                  <span>Carburants</span>
+                </button>
+                <button
+                  onClick={() => setFilter("charging")}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2
+                             ${
+                               filter === "charging"
+                                 ? "bg-green-600 text-white"
+                                 : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+                             }`}
+                >
+                  <FaBolt className="w-4 h-4" />
+                  <span>Bornes</span>
+                </button>
+              </div>
 
-            {/* Sélecteur de carburant amélioré */}
-            <FuelSelect value={selectedFuel} onChange={onFuelChange} />
+              {/* Filtres spécifiques selon le mode */}
+              {(filter === "all" || filter === "fuel") && (
+                <FuelSelect value={selectedFuel} onChange={onFuelChange} />
+              )}
+            </div>
           </div>
 
           {/* Liste des stations */}
-          <div className="flex-1 overflow-auto">
-            {stations?.length > 0 ? (
-              <div className="p-4 space-y-3">
-                {stations.map((station) => (
-                  <div
-                    key={station.id}
-                    className="group relative p-4 bg-zinc-800 rounded-xl
-                             hover:bg-zinc-750 transition-colors duration-200"
-                  >
-                    {/* En-tête de la station */}
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex gap-3">
-                        <div
-                          className="w-12 h-12 rounded-xl bg-gradient-to-tr from-blue-500 to-blue-600 
-                                        border border-blue-500/10
-                                        flex items-center justify-center group"
-                        >
-                          <FaGasPump
-                            className="w-6 h-6 text-white group-hover:text-blue-300 
-                                               transition-colors duration-200"
-                          />
+          <div className="flex-1 overflow-auto p-4">
+            <div className="space-y-4">
+              {/* Stations essence */}
+              {(filter === "all" || filter === "fuel") && (
+                <div className="space-y-3">
+                  {stations.map((station) => (
+                    <div
+                      key={station.id}
+                      className="group relative p-4 bg-zinc-800 rounded-xl
+                               hover:bg-zinc-750 transition-colors duration-200"
+                    >
+                      {/* En-tête de la station */}
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex gap-3">
+                          <div
+                            className="w-12 h-12 rounded-xl bg-gradient-to-tr from-blue-500 to-blue-600 
+                                          border border-blue-500/10
+                                          flex items-center justify-center group"
+                          >
+                            <FaGasPump
+                              className="w-6 h-6 text-white group-hover:text-blue-300 
+                                                 transition-colors duration-200"
+                            />
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-white">
+                              {station.brand || station.name}
+                            </h3>
+                            <p className="text-sm text-zinc-400 line-clamp-1">
+                              {station.address}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-medium text-white">
-                            {station.brand || station.name}
-                          </h3>
-                          <p className="text-sm text-zinc-400 line-clamp-1">
-                            {station.address}
-                          </p>
-                        </div>
-                      </div>
 
-                      {/* Prix principal */}
-                      <div className="flex flex-col items-end">
-                        <div className="px-3 py-1 bg-green-600/20 rounded-lg">
-                          <span className="text-green-400 font-semibold">
-                            {formatPrice(getFuelPrice(station, selectedFuel))}
+                        {/* Prix principal */}
+                        <div className="flex flex-col items-end">
+                          <div className="px-3 py-1 bg-green-600/20 rounded-lg">
+                            <span className="text-green-400 font-semibold">
+                              {formatPrice(getFuelPrice(station, selectedFuel))}
+                            </span>
+                          </div>
+                          <span className="text-xs text-zinc-500 mt-1">
+                            {selectedFuel.toUpperCase()}
                           </span>
                         </div>
-                        <span className="text-xs text-zinc-500 mt-1">
-                          {selectedFuel.toUpperCase()}
-                        </span>
+                      </div>
+
+                      {/* Grille des prix */}
+                      <div className="grid grid-cols-3 gap-2 mb-3">
+                        {Object.entries(station.prices)
+                          .filter(([_, price]) => price !== null)
+                          .map(([fuel, price]) => (
+                            <div
+                              key={fuel}
+                              className={`px-2 py-1 rounded bg-zinc-700/50
+                                        ${
+                                          fuel === selectedFuel
+                                            ? "ring-1 ring-blue-500"
+                                            : ""
+                                        }`}
+                            >
+                              <div className="text-xs text-zinc-400">
+                                {fuel.toUpperCase()}
+                              </div>
+                              <div className="text-sm font-medium text-white">
+                                {formatPrice(price)}
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+
+                      {/* Footer avec date précise et temps relatif */}
+                      <div
+                        className="flex items-center justify-between pt-3 
+                                      border-t border-zinc-700/50"
+                      >
+                        {formatLastUpdate(station.lastUpdate)}
+
+                        <button
+                          onClick={() =>
+                            window.open(
+                              `https://www.google.com/maps/dir/?api=1&destination=${station.latitude},${station.longitude}`,
+                              "_blank"
+                            )
+                          }
+                          className="flex items-center gap-2 px-4 py-2 
+                                     bg-blue-600 hover:bg-blue-700 rounded-lg 
+                                     text-white font-medium transition-colors"
+                        >
+                          <FaLocationArrow className="w-3.5 h-3.5" />
+                          <span>Itinéraire</span>
+                        </button>
                       </div>
                     </div>
-
-                    {/* Grille des prix */}
-                    <div className="grid grid-cols-3 gap-2 mb-3">
-                      {Object.entries(station.prices)
-                        .filter(([_, price]) => price !== null)
-                        .map(([fuel, price]) => (
-                          <div
-                            key={fuel}
-                            className={`px-2 py-1 rounded bg-zinc-700/50
-                                      ${
-                                        fuel === selectedFuel
-                                          ? "ring-1 ring-blue-500"
-                                          : ""
-                                      }`}
-                          >
-                            <div className="text-xs text-zinc-400">
-                              {fuel.toUpperCase()}
-                            </div>
-                            <div className="text-sm font-medium text-white">
-                              {formatPrice(price)}
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-
-                    {/* Footer avec date précise et temps relatif */}
-                    <div
-                      className="flex items-center justify-between pt-3 
-                                    border-t border-zinc-700/50"
-                    >
-                      {formatLastUpdate(station.lastUpdate)}
-
-                      <button
-                        onClick={() =>
-                          window.open(
-                            `https://www.google.com/maps/dir/?api=1&destination=${station.latitude},${station.longitude}`,
-                            "_blank"
-                          )
-                        }
-                        className="flex items-center gap-2 px-4 py-2 
-                                   bg-blue-600 hover:bg-blue-700 rounded-lg 
-                                   text-white font-medium transition-colors"
-                      >
-                        <FaLocationArrow className="w-3.5 h-3.5" />
-                        <span>Itinéraire</span>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-                <div
-                  className="w-16 h-16 mb-6 rounded-full bg-zinc-800 
-                                flex items-center justify-center"
-                >
-                  <FaGasPump className="w-8 h-8 text-zinc-600" />
+                  ))}
                 </div>
+              )}
 
-                <h3 className="text-xl font-medium text-white mb-3">
-                  Aucune station trouvée
-                </h3>
-
-                <p className="text-zinc-400 text-sm max-w-[280px] mb-8">
-                  Voici quelques suggestions pour trouver des stations :
-                </p>
-
-                <div className="space-y-4 w-full max-w-[280px]">
-                  <div className="flex items-start gap-3 text-left">
-                    <div
-                      className="w-8 h-8 rounded-lg bg-zinc-800 flex-shrink-0
-                                    flex items-center justify-center"
-                    >
-                      <FaSearch className="w-4 h-4 text-blue-400" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-zinc-200">
-                        Recherchez une ville
-                      </h4>
-                      <p className="text-xs text-zinc-400 mt-1">
-                        Utilisez la barre de recherche pour trouver une zone
-                        spécifique
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3 text-left">
-                    <div
-                      className="w-8 h-8 rounded-lg bg-zinc-800 flex-shrink-0
-                                    flex items-center justify-center"
-                    >
-                      <FaMapMarkerAlt className="w-4 h-4 text-blue-400" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-zinc-200">
-                        Déplacez la carte
-                      </h4>
-                      <p className="text-xs text-zinc-400 mt-1">
-                        Explorez d'autres zones en déplaçant la carte ou en
-                        zoomant
-                      </p>
-                    </div>
-                  </div>
+              {/* Bornes de recharge */}
+              {(filter === "all" || filter === "charging") && (
+                <div className="space-y-3">
+                  {chargingStations.map((station, index) =>
+                    renderChargingStation(station, index)
+                  )}
                 </div>
+              )}
 
-                {/* Bouton de réinitialisation des filtres si des filtres sont actifs */}
-                {sortBy && (
-                  <button
-                    onClick={() => {
-                      setSortBy(null);
-                      onSortChange("");
-                    }}
-                    className="mt-8 px-4 py-2 bg-blue-600 rounded-lg text-white text-sm 
-                               hover:bg-blue-700 transition-colors"
-                  >
-                    Réinitialiser les filtres
-                  </button>
-                )}
-              </div>
-            )}
+              {/* Message si aucun résultat */}
+              {stations.length === 0 && chargingStations.length === 0 && (
+                <div className="text-center py-8">
+                  <p className="text-zinc-400">
+                    Aucun point de ravitaillement trouvé
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

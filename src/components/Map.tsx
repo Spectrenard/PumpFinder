@@ -11,6 +11,10 @@ import Sidebar from "./Sidebar";
 import "leaflet.markercluster";
 import { renderToString } from "react-dom/server";
 import StationPopup from "./StationPopup";
+import { ChargingStation } from "@/services/chargingStationService";
+import { fetchNearbyChargingStations } from "@/services/chargingStationService";
+import ChargingStationPopup from "./ChargingStationPopup";
+import { FaBolt, FaGasPump } from "react-icons/fa";
 
 type Station = {
   id: string;
@@ -32,15 +36,22 @@ interface MapProps {
   mapRef: React.RefObject<L.Map | null>;
   isSidebarOpen: boolean;
   onCloseSidebar: () => void;
+  displayMode: "fuel" | "charging";
+  onDisplayModeChange: (mode: "fuel" | "charging") => void;
 }
 
 export default function Map({
   mapRef,
   isSidebarOpen,
   onCloseSidebar,
+  displayMode,
+  onDisplayModeChange,
 }: MapProps) {
   const [selectedFuel, setSelectedFuel] = useState("sp95");
   const [stations, setStations] = useState<FuelStation[]>([]);
+  const [chargingStations, setChargingStations] = useState<ChargingStation[]>(
+    []
+  );
   const [isLoading, setIsLoading] = useState(true);
   const markersRef = useRef<any | null>(null);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(
@@ -142,14 +153,54 @@ export default function Map({
   const loadNearbyStations = async (lat: number, lon: number) => {
     setIsLoading(true);
     try {
-      const L = (await import("leaflet")).default;
-      const nearbyStations = await fetchNearbyStations(lat, lon);
-      setStations(nearbyStations);
+      const [nearbyFuelStations, nearbyChargingStations] = await Promise.all([
+        fetchNearbyStations(lat, lon),
+        fetchNearbyChargingStations(lat, lon),
+      ]);
+
+      setStations(nearbyFuelStations);
+      setChargingStations(nearbyChargingStations);
 
       if (markersRef.current) {
         markersRef.current.clearLayers();
 
-        nearbyStations.forEach((station: FuelStation) => {
+        // Créer deux groupes de marqueurs distincts
+        const fuelMarkerCluster = L.markerClusterGroup({
+          chunkedLoading: true,
+          spiderfyOnMaxZoom: true,
+          showCoverageOnHover: false,
+          zoomToBoundsOnClick: true,
+          iconCreateFunction: function (cluster) {
+            const count = cluster.getChildCount();
+            return L.divIcon({
+              html: `<div class="bg-blue-500 rounded-full flex items-center justify-center text-white font-medium" style="width: 30px; height: 30px;">
+                ${count}
+              </div>`,
+              className: "custom-marker-cluster",
+              iconSize: L.point(30, 30),
+            });
+          },
+        });
+
+        const chargingMarkerCluster = L.markerClusterGroup({
+          chunkedLoading: true,
+          spiderfyOnMaxZoom: true,
+          showCoverageOnHover: false,
+          zoomToBoundsOnClick: true,
+          iconCreateFunction: function (cluster) {
+            const count = cluster.getChildCount();
+            return L.divIcon({
+              html: `<div class="bg-green-500 rounded-full flex items-center justify-center text-white font-medium" style="width: 30px; height: 30px;">
+                ${count}
+              </div>`,
+              className: "custom-marker-cluster",
+              iconSize: L.point(30, 30),
+            });
+          },
+        });
+
+        // Ajouter les stations essence au groupe bleu
+        nearbyFuelStations.forEach((station: FuelStation) => {
           const marker = L.marker([station.latitude, station.longitude], {
             icon: L.divIcon({
               className: "station-marker",
@@ -164,16 +215,40 @@ export default function Map({
           const popupContent = renderToString(
             <StationPopup station={station} />
           );
-
           marker.bindPopup(popupContent, {
             className: "custom-popup",
-            maxWidth: 400,
-            minWidth: 280,
+          });
+          fuelMarkerCluster.addLayer(marker);
+        });
+
+        // Ajouter les bornes de recharge au groupe vert
+        nearbyChargingStations.forEach((station) => {
+          const marker = L.marker([station.latitude, station.longitude], {
+            icon: L.divIcon({
+              className: "charging-station-marker",
+              html: `<div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white">
+                      <i class="fas fa-bolt text-sm"></i>
+                    </div>`,
+              iconSize: [32, 32],
+              iconAnchor: [16, 32],
+            }),
           });
 
-          markersRef.current.addLayer(marker);
+          const popupContent = renderToString(
+            <ChargingStationPopup station={station} />
+          );
+          marker.bindPopup(popupContent, {
+            className: "custom-popup",
+          });
+          chargingMarkerCluster.addLayer(marker);
         });
+
+        // Ajouter les deux groupes à la carte
+        mapRef.current?.addLayer(fuelMarkerCluster);
+        mapRef.current?.addLayer(chargingMarkerCluster);
       }
+    } catch (error) {
+      console.error("Erreur lors du chargement des stations:", error);
     } finally {
       setIsLoading(false);
     }
@@ -262,7 +337,10 @@ export default function Map({
     `;
 
     const marker = L.marker([station.latitude, station.longitude]).bindPopup(
-      popupContent
+      popupContent,
+      {
+        className: "custom-popup",
+      }
     );
 
     markersRef.current.addLayer(marker);
@@ -272,12 +350,14 @@ export default function Map({
     <div className="absolute inset-0 flex">
       <Sidebar
         stations={stations}
+        chargingStations={chargingStations}
         selectedFuel={selectedFuel}
         onFuelChange={handleFuelChange}
         onSortChange={handleSortChange}
         isOpen={isSidebarOpen}
         onClose={onCloseSidebar}
       />
+
       <div className="flex-1 relative">
         <div id="map" className="w-full h-full z-0" />
       </div>

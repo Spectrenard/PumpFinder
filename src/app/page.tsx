@@ -17,6 +17,7 @@ const Map = dynamic(() => import("@/components/Map"), {
 export default function Home() {
   const mapRef = useRef(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [displayMode, setDisplayMode] = useState<"fuel" | "charging">("fuel");
 
   return (
     <main className="h-screen flex flex-col bg-background">
@@ -29,6 +30,8 @@ export default function Home() {
           mapRef={mapRef}
           isSidebarOpen={isSidebarOpen}
           onCloseSidebar={() => setIsSidebarOpen(false)}
+          displayMode={displayMode}
+          onDisplayModeChange={setDisplayMode}
         />
       </div>
     </main>
