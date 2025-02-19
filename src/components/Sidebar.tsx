@@ -63,6 +63,7 @@ export default function Sidebar({
 }: SidebarProps) {
   const [sortBy, setSortBy] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "fuel" | "charging">("all");
+  const [priceFilter, setPriceFilter] = useState<"asc" | "desc" | null>(null);
 
   const formatPrice = (price: number | null | undefined) => {
     return price ? `${price.toFixed(2)} €/L` : "Non disponible";
@@ -186,6 +187,21 @@ export default function Sidebar({
     </div>
   );
 
+  // Fonction pour trier les stations par prix
+  const sortStationsByPrice = (stationsToSort: FuelStation[]) => {
+    if (!priceFilter) return stationsToSort;
+
+    return [...stationsToSort].sort((a, b) => {
+      const priceA = getFuelPrice(a, selectedFuel) || Infinity;
+      const priceB = getFuelPrice(b, selectedFuel) || Infinity;
+
+      return priceFilter === "asc" ? priceA - priceB : priceB - priceA;
+    });
+  };
+
+  // Stations triées
+  const sortedStations = sortStationsByPrice(stations);
+
   return (
     <>
       {/* Overlay */}
@@ -281,7 +297,46 @@ export default function Sidebar({
 
               {/* Filtres spécifiques selon le mode */}
               {(filter === "all" || filter === "fuel") && (
-                <FuelSelect value={selectedFuel} onChange={onFuelChange} />
+                <div className="space-y-3">
+                  <FuelSelect value={selectedFuel} onChange={onFuelChange} />
+
+                  {/* Nouveau filtre de prix */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setPriceFilter(null)}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium
+                                ${
+                                  !priceFilter
+                                    ? "bg-zinc-700 text-white"
+                                    : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+                                }`}
+                    >
+                      Par défaut
+                    </button>
+                    <button
+                      onClick={() => setPriceFilter("asc")}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2
+                                ${
+                                  priceFilter === "asc"
+                                    ? "bg-blue-600 text-white"
+                                    : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+                                }`}
+                    >
+                      <span>Prix croissant</span>
+                    </button>
+                    <button
+                      onClick={() => setPriceFilter("desc")}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2
+                                ${
+                                  priceFilter === "desc"
+                                    ? "bg-blue-600 text-white"
+                                    : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+                                }`}
+                    >
+                      <span>Prix décroissant</span>
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           </div>
@@ -292,7 +347,7 @@ export default function Sidebar({
               {/* Stations essence */}
               {(filter === "all" || filter === "fuel") && (
                 <div className="space-y-3">
-                  {stations.map((station) => (
+                  {sortedStations.map((station) => (
                     <div
                       key={station.id}
                       className="group relative p-4 bg-zinc-800 rounded-xl
