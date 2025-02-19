@@ -7,7 +7,7 @@ import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import { fetchNearbyStations, FuelStation } from "@/services/stationService";
 import { createStationMarker } from "./StationMarker";
-import Sidebar from "./Sidebar";
+import Sidebar from "./Sidebar/Sidebar";
 import "leaflet.markercluster";
 import { renderToString } from "react-dom/server";
 import StationPopup from "./StationPopup";
