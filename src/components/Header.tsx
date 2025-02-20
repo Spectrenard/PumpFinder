@@ -156,14 +156,14 @@ export default function Header({
                       setSearchError(null);
                     }}
                     placeholder="Rechercher une ville..."
-                    className={`w-full pl-11 pr-4 py-3 outline-none
+                    className={`w-full pl-11 pr-4 py-3 outline-none text-[16px]
                                ${
                                  searchError
                                    ? "border-red-500/50 focus:border-red-500/50"
                                    : "border-zinc-700/50 focus:border-blue-500/50"
                                } 
                                bg-zinc-800/50 border rounded-xl text-white
-                               placeholder:text-zinc-500 text-[15px]
+                               placeholder:text-zinc-500
                                focus:bg-zinc-800 transition-all duration-200`}
                   />
                   {isSearching ? (
@@ -272,9 +272,9 @@ export default function Header({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Rechercher une ville, une adresse..."
-                className="w-full pl-11 pr-4 py-3 bg-zinc-800 
+                className="w-full pl-11 pr-4 py-3 bg-zinc-800 text-[16px]
                          border border-zinc-700 rounded-xl text-white
-                         placeholder:text-zinc-500 text-[15px]
+                         placeholder:text-zinc-500
                          focus:border-blue-500 focus:bg-zinc-700
                          transition-colors duration-200"
               />
