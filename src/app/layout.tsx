@@ -10,8 +10,8 @@ export const metadata: Metadata = {
   description: "Comparez les prix des carburants près de chez vous",
   viewport: {
     width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
+    initialScale: 0,
+    maximumScale: 0,
     userScalable: false,
   },
 };
@@ -24,6 +24,12 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <head>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover"
+        />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <link
           rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
