@@ -1,5 +1,5 @@
 import { FaGasPump, FaBolt } from "react-icons/fa";
-import FuelSelect from "../FuelSelect";
+import FuelSelect from "./FuelSelect";
 
 interface SidebarFiltersProps {
   filter: "all" | "fuel" | "charging";

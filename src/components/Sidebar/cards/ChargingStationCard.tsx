@@ -1,7 +1,7 @@
 import { FaBolt, FaLocationArrow, FaPlug } from "react-icons/fa";
-import { ChargingStation } from "./types";
-import { formatLastUpdate } from "./utils";
-import { LastUpdateDisplay } from "./LastUpdateDisplay";
+import { ChargingStation } from "../types";
+import { formatLastUpdate } from "../utils";
+import { LastUpdateDisplay } from "../LastUpdateDisplay";
 
 interface ChargingStationCardProps {
   station: ChargingStation;

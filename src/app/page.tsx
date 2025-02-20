@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 
 // Import dynamique des composants qui utilisent Leaflet
 const Header = dynamic(() => import("@/components/Header"), { ssr: false });
-const Map = dynamic(() => import("@/components/Map"), {
+const Map = dynamic(() => import("@/components/Map/Map"), {
   ssr: false,
   loading: () => (
     <div className="flex-1 flex items-center justify-center">

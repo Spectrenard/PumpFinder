@@ -1,7 +1,7 @@
 import { FaGasPump, FaLocationArrow } from "react-icons/fa";
-import { FuelStation } from "./types";
-import { LastUpdateDisplay } from "./LastUpdateDisplay";
-import { formatLastUpdate } from "./utils";
+import { FuelStation } from "../types";
+import { LastUpdateDisplay } from "../LastUpdateDisplay";
+import { formatLastUpdate } from "../utils";
 
 interface StationCardProps {
   station: FuelStation;
@@ -32,20 +32,20 @@ export function StationCard({
                                 transition-colors duration-200"
             />
           </div>
-          <div>
+          <div className="max-w-[60%]">
             <h3 className="font-medium text-white">
               {station.brand || station.name}
             </h3>
-            <p className="text-sm text-zinc-400 line-clamp-1">
+            <p className="text-sm text-zinc-400 line-clamp-2">
               {station.address}
             </p>
           </div>
         </div>
 
         {/* Prix principal */}
-        <div className="flex flex-col items-end">
+        <div className="flex flex-col items-end ml-4">
           <div className="px-3 py-1 bg-green-600/20 rounded-lg">
-            <span className="text-green-400 font-semibold">
+            <span className="text-green-400 font-semibold whitespace-nowrap">
               {formatPrice(getFuelPrice(station, selectedFuel))}
             </span>
           </div>
@@ -62,13 +62,18 @@ export function StationCard({
           .map(([fuel, price]) => (
             <div
               key={fuel}
-              className={`px-2 py-1 rounded bg-zinc-700/50
+              className={`px-2 py-1.5 rounded bg-zinc-700/50
                        ${fuel === selectedFuel ? "ring-1 ring-blue-500" : ""}`}
             >
               <div className="text-xs text-zinc-400">{fuel.toUpperCase()}</div>
               <div className="text-sm font-medium text-white">
                 {formatPrice(price)}
               </div>
+              {price && (
+                <div className="text-xs text-zinc-400 mt-1">
+                  {price ? `${(price * 50).toFixed(2)} € /50L` : "-"}
+                </div>
+              )}
             </div>
           ))}
       </div>

@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { FaBolt } from "react-icons/fa";
-import FuelSelect from "../FuelSelect";
-import { StationCard } from "./StationCard";
+import FuelSelect from "./filters/FuelSelect";
+import { StationCard } from "./cards/StationCard";
 import { SidebarProps, FuelStation } from "./types";
-import { ChargingStationCard } from "./ChargingStationCard";
+import { ChargingStationCard } from "./cards/ChargingStationCard";
 import { SidebarHeader } from "./SidebarHeader";
-import { SidebarFilters } from "./SidebarFilters";
+import { SidebarFilters } from "./filters/SidebarFilters";
 
 export default function Sidebar({
   stations = [],
