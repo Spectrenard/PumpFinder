@@ -6,8 +6,9 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "PumpFinder - Trouvez le carburant le moins cher",
-  description: "Comparez les prix des carburants près de chez vous",
+  title: "PumpFinder | Prix des carburants en temps réel",
+  description:
+    "Trouvez les stations-service les moins chères près de chez vous. Prix de l'essence, diesel et bornes de recharge mis à jour en temps réel.",
 };
 
 export default function RootLayout({
